@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, AsyncIterable, List, Optional
+from typing import Any, AsyncGenerator, List, Optional
 
 import aiohttp
 from pydantic import HttpUrl
@@ -53,6 +53,8 @@ class OllamaChatCompletion(TextCompletionClientBase, ChatCompletionClientBase):
         Returns:
             List[ChatMessageContent] -- A list of ChatMessageContent objects representing the response(s) from the LLM.
         """
+        if not settings.ai_model_id:
+            settings.ai_model_id = self.ai_model_id
         settings.messages = self._prepare_chat_history_for_request(chat_history)
         settings.stream = False
         async with AsyncSession(self.session) as session:
@@ -73,7 +75,7 @@ class OllamaChatCompletion(TextCompletionClientBase, ChatCompletionClientBase):
         chat_history: ChatHistory,
         settings: OllamaChatPromptExecutionSettings,
         **kwargs: Any,
-    ) -> AsyncIterable[List[StreamingChatMessageContent]]:
+    ) -> AsyncGenerator[List[StreamingChatMessageContent], Any]:
         """
         Streams a text completion using a Ollama model.
         Note that this method does not support multiple responses.
@@ -87,6 +89,8 @@ class OllamaChatCompletion(TextCompletionClientBase, ChatCompletionClientBase):
         Yields:
             List[StreamingChatMessageContent] -- Stream of StreamingChatMessageContent objects.
         """
+        if not settings.ai_model_id:
+            settings.ai_model_id = self.ai_model_id
         settings.messages = self._prepare_chat_history_for_request(chat_history)
         settings.stream = True
         async with AsyncSession(self.session) as session:
@@ -98,6 +102,7 @@ class OllamaChatCompletion(TextCompletionClientBase, ChatCompletionClientBase):
                         break
                     yield [
                         StreamingChatMessageContent(
+                            role="assistant",
                             choice_index=0,
                             inner_content=body,
                             ai_model_id=self.ai_model_id,
@@ -122,6 +127,8 @@ class OllamaChatCompletion(TextCompletionClientBase, ChatCompletionClientBase):
         Returns:
             List["TextContent"] -- The completion result(s).
         """
+        if not settings.ai_model_id:
+            settings.ai_model_id = self.ai_model_id
         settings.messages = [{"role": "user", "content": prompt}]
         settings.stream = False
         async with AsyncSession(self.session) as session:
@@ -140,7 +147,7 @@ class OllamaChatCompletion(TextCompletionClientBase, ChatCompletionClientBase):
         self,
         prompt: str,
         settings: OllamaChatPromptExecutionSettings,
-    ) -> AsyncIterable[List[StreamingTextContent]]:
+    ) -> AsyncGenerator[List[StreamingTextContent], Any]:
         """
         Streams a text completion using a Ollama model.
         Note that this method does not support multiple responses.
@@ -153,6 +160,8 @@ class OllamaChatCompletion(TextCompletionClientBase, ChatCompletionClientBase):
             List["StreamingTextContent"] -- The result stream made up of StreamingTextContent objects.
         """
 
+        if not settings.ai_model_id:
+            settings.ai_model_id = self.ai_model_id
         settings.messages = [{"role": "user", "content": prompt}]
         settings.stream = True
         async with AsyncSession(self.session) as session:

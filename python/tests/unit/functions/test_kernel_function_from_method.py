@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft. All rights reserved.
 import sys
-from typing import AsyncIterable, Iterable, Optional, Union
+from typing import Any, AsyncGenerator, Iterable, Optional, Union
+
+from semantic_kernel.functions.kernel_function_from_method import KernelFunctionFromMethod
 
 if sys.version_info >= (3, 9):
     from typing import Annotated
@@ -176,7 +178,7 @@ async def test_invoke_gen():
 @pytest.mark.asyncio
 async def test_invoke_gen_async():
     @kernel_function()
-    async def async_gen_function() -> AsyncIterable[str]:
+    async def async_gen_function() -> AsyncGenerator[str, Any]:
         yield ""
 
     native_function = KernelFunction.from_method(method=async_gen_function, plugin_name="MockPlugin")
@@ -311,3 +313,8 @@ async def test_service_execution_with_complex_object_from_str_mixed_multi():
     arguments = KernelArguments(input_obj={"arg1": "test", "arg2": 5}, input_str="test2")
     result = await func.invoke(kernel, arguments)
     assert result.value == "test test2 5"
+
+
+def test_function_from_lambda():
+    func = KernelFunctionFromMethod(method=kernel_function(lambda x: x**2, name="square"), plugin_name="math")
+    assert func is not None
