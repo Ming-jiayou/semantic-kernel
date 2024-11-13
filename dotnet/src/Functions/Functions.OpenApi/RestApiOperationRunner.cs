@@ -214,7 +214,7 @@ internal sealed class RestApiOperationRunner
 
         try
         {
-            responseMessage = await this._httpClient.SendWithSuccessCheckAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            responseMessage = await this._httpClient.SendWithSuccessCheckAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 
             response = await this.ReadContentAndCreateOperationResponseAsync(requestMessage, responseMessage, payload, cancellationToken).ConfigureAwait(false);
 
@@ -374,7 +374,7 @@ internal sealed class RestApiOperationRunner
     /// <param name="arguments">The arguments.</param>
     /// <param name="propertyNamespace">The namespace to add to the property name.</param>
     /// <returns>The JSON object.</returns>
-    private JsonObject BuildJsonObject(IList<RestApiOperationPayloadProperty> properties, IDictionary<string, object?> arguments, string? propertyNamespace = null)
+    private JsonObject BuildJsonObject(IReadOnlyList<RestApiOperationPayloadProperty> properties, IDictionary<string, object?> arguments, string? propertyNamespace = null)
     {
         var result = new JsonObject();
 

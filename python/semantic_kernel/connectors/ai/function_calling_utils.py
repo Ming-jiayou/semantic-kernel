@@ -9,7 +9,10 @@ from semantic_kernel.contents.utils.author_role import AuthorRole
 from semantic_kernel.exceptions.service_exceptions import ServiceInitializationError
 
 if TYPE_CHECKING:
-    from semantic_kernel.connectors.ai.function_choice_behavior import FunctionCallChoiceConfiguration
+    from semantic_kernel.connectors.ai.function_choice_behavior import (
+        FunctionCallChoiceConfiguration,
+        FunctionChoiceType,
+    )
     from semantic_kernel.connectors.ai.prompt_execution_settings import PromptExecutionSettings
     from semantic_kernel.functions.kernel_function_metadata import KernelFunctionMetadata
 
@@ -17,7 +20,7 @@ if TYPE_CHECKING:
 def update_settings_from_function_call_configuration(
     function_choice_configuration: "FunctionCallChoiceConfiguration",
     settings: "PromptExecutionSettings",
-    type: str,
+    type: "FunctionChoiceType",
 ) -> None:
     """Update the settings from a FunctionChoiceConfiguration."""
     if (
@@ -43,8 +46,10 @@ def kernel_function_metadata_to_function_call_format(
             "description": metadata.description or "",
             "parameters": {
                 "type": "object",
-                "properties": {param.name: param.schema_data for param in metadata.parameters},
-                "required": [p.name for p in metadata.parameters if p.is_required],
+                "properties": {
+                    param.name: param.schema_data for param in metadata.parameters if param.include_in_function_choices
+                },
+                "required": [p.name for p in metadata.parameters if p.is_required and p.include_in_function_choices],
             },
         },
     }
