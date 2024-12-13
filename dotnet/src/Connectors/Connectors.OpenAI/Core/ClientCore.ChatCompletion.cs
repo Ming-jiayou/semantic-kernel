@@ -456,7 +456,8 @@ internal partial class ClientCore
 #pragma warning restore OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             EndUserId = executionSettings.User,
             TopLogProbabilityCount = executionSettings.TopLogprobs,
-            IncludeLogProbabilities = executionSettings.Logprobs
+            IncludeLogProbabilities = executionSettings.Logprobs,
+            StoredOutputEnabled = executionSettings.Store,
         };
 
         var responseFormat = GetResponseFormat(executionSettings);
@@ -494,6 +495,14 @@ internal partial class ClientCore
         if (toolCallingConfig.Options?.AllowParallelCalls is not null)
         {
             options.AllowParallelToolCalls = toolCallingConfig.Options.AllowParallelCalls;
+        }
+
+        if (executionSettings.Metadata is not null)
+        {
+            foreach (var kvp in executionSettings.Metadata)
+            {
+                options.Metadata.Add(kvp.Key, kvp.Value);
+            }
         }
 
         return options;
@@ -540,10 +549,10 @@ internal partial class ClientCore
                     }
                 }
 
-                return OpenAIChatResponseFormatHelper.GetJsonSchemaResponseFormat(formatElement);
+                return OpenAIChatResponseFormatBuilder.GetJsonSchemaResponseFormat(formatElement);
 
             case Type formatObjectType:
-                return OpenAIChatResponseFormatHelper.GetJsonSchemaResponseFormat(formatObjectType);
+                return OpenAIChatResponseFormatBuilder.GetJsonSchemaResponseFormat(formatObjectType);
         }
 
         return null;
