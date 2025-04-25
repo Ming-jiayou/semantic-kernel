@@ -214,6 +214,7 @@ class AgentThreadActions:
                         tool_outputs=tool_outputs,  # type: ignore
                     )
                     logger.debug(f"Submitted tool outputs for agent `{agent.name}` and thread `{thread_id}`")
+                    continue
 
             steps_response = await agent.client.agents.list_run_steps(run_id=run.id, thread_id=thread_id)
             logger.debug(f"Called for steps_response for run [{run.id}] agent `{agent.name}` and thread `{thread_id}`")
@@ -458,14 +459,19 @@ class AgentThreadActions:
                         if not details:
                             continue
                         if isinstance(details, RunStepDeltaToolCallObject) and details.tool_calls:
+                            content_is_visible = False
                             for tool_call in details.tool_calls:
                                 content = None
                                 if tool_call.type == "function":
                                     content = generate_streaming_function_content(agent.name, details)
                                 elif tool_call.type == "code_interpreter":
                                     content = generate_streaming_code_interpreter_content(agent.name, details)
+                                    content_is_visible = True
                                 if content:
-                                    yield content
+                                    if output_messages is not None:
+                                        output_messages.append(content)
+                                    if content_is_visible:
+                                        yield content
 
                     elif event_type == AgentStreamEvent.THREAD_RUN_REQUIRES_ACTION:
                         run = cast(ThreadRun, event_data)
